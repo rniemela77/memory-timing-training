@@ -6,23 +6,53 @@
       <div class="player-aura">
         <div class="player" ref="player"></div>
       </div>
-      <div class="enemy" ref="enemy"></div>
+      <div class="enemy" ref="enemy" :style="currClipPath"></div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 
 const isLoading = ref(true);
 
-const gameSpeed = ref(100);
+const currClipPath = computed(() => {
+  return enemyPosition.value < 50 && currentArrow.value.defeated < 1
+    ? { clipPath: currentArrow.value.clipPath }
+    : { clipPath: "polygon(0 0, 100% 0, 100% 100%, 0% 100%)" };
+});
+
+const gameSpeed = ref(200);
 const enemySpeed = ref(1);
 const arrows = [
-  { code: "&#8592;", keyCode: "ArrowLeft" },
-  { code: "&#8593;", keyCode: "ArrowUp" },
-  { code: "&#8594;", keyCode: "ArrowRight" },
-  { code: "&#8595;", keyCode: "ArrowDown" },
+  {
+    code: "&#8592;",
+    keyCode: "ArrowLeft",
+    clipPath: "polygon(0 50%, 100% 0, 100% 100%, 0 50%)",
+    color: "orange",
+    defeated: 0,
+  },
+  {
+    code: "&#8593;",
+    keyCode: "ArrowUp",
+    clipPath: "polygon(50% 0, 50% 0, 100% 100%, 0% 100%)",
+    color: "cyan",
+    defeated: 0,
+  },
+  {
+    code: "&#8594;",
+    keyCode: "ArrowRight",
+    clipPath: "polygon(0 0, 100% 50%, 100% 50%, 0 100%)",
+    color: "pink",
+    defeated: 0,
+  },
+  {
+    code: "&#8595;",
+    keyCode: "ArrowDown",
+    clipPath: "polygon(0 0, 100% 0, 50% 100%, 50% 100%)",
+    color: "yellow",
+    defeated: 0,
+  },
 ];
 const currentArrow = ref(null);
 const enemyPosition = ref(0);
@@ -64,7 +94,7 @@ const newGame = () => {
     if (enemyPosition.value >= 80) {
       enemy.value.style.background = "white";
     } else {
-      enemy.value.style.background = "red";
+      enemy.value.style.backgroundColor = currentArrow.value.color;
     }
   }, gameSpeed.value);
 };
@@ -72,10 +102,10 @@ const newGame = () => {
 window.addEventListener("keydown", (e) => {
   // ...
   if (e.code === currentArrow.value.keyCode && enemyPosition.value > 80) {
-    gameSpeed.value = gameSpeed.value * 0.9;
+    // gameSpeed.value = gameSpeed.value * 0.9;
     hit.value = true;
   } else {
-    gameSpeed.value = gameSpeed.value * 1.1;
+    // gameSpeed.value = gameSpeed.value * 1.1;
   }
 });
 
@@ -86,21 +116,28 @@ watch(hit, (value) => {
     enemyPosition.value = -15;
     console.log("hit");
     hit.value = false;
+    arrows.forEach((arrow) => {
+      if (arrow.keyCode === currentArrow.value.keyCode) {
+        arrow.defeated++;
+        console.log("arrow.defeated: ", arrow.defeated);
+      }
+    });
     // set random arrow on enemy
     currentArrow.value = arrows[Math.floor(Math.random() * arrows.length)];
+
+    newGame();
   }
 });
 
 watch(gameSpeed, (value) => {
-  console.log(gameSpeed.value);
-  newGame();
-
+  // console.log(gameSpeed.value);
+  // newGame();
   // keep the game speed between 20 and 100
-  if (gameSpeed.value < 20) {
-    gameSpeed.value = 20;
-  } else if (gameSpeed.value > 100) {
-    gameSpeed.value = 100;
-  }
+  // if (gameSpeed.value < 20) {
+  //   gameSpeed.value = 20;
+  // } else if (gameSpeed.value > 100) {
+  //   gameSpeed.value = 100;
+  // }
 });
 const player = ref(null);
 
@@ -127,10 +164,10 @@ newGame();
 
 .player,
 .enemy {
-  width: 10px;
+  width: 20px;
   height: 20px;
   position: absolute;
-  transition: all 0.1s linear;
+  transition: all 0.2s linear;
 }
 
 .player-aura {
