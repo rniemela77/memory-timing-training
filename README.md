@@ -1,3 +1,5 @@
 # memory-timing-training
 
-[Edit on StackBlitz ⚡️](https://stackblitz.com/edit/vitejs-vite-qjqaus)
+Purpose: To train working memory and timing skills to improve cognitive performance
+
+## Description
