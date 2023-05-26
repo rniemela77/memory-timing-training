@@ -1,29 +1,26 @@
 <template>
-  <div id="app" v-if="isLoading">
+  <div id="app">
     <div class="game-board">
       <div class="x-ray"></div>
-
       <div class="player-aura">
         <div class="player" ref="player"></div>
       </div>
-      <div class="enemy" ref="enemy" :style="currClipPath"></div>
+      <div class="enemy" ref="enemy" :style="enemyStyles"></div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, onBeforeUnmount, computed, watchEffect } from "vue";
 
-const isLoading = ref(true);
+let enemyInterval = null;
 
-const currClipPath = computed(() => {
-  return enemyPosition.value < 50 && currentArrow.value.defeated < 1
-    ? { clipPath: currentArrow.value.clipPath }
-    : { clipPath: "polygon(0 0, 100% 0, 100% 100%, 0% 100%)" };
-});
-
+const enemy = ref(null);
 const gameSpeed = ref(200);
-const enemySpeed = ref(1);
+const enemyPosition = ref(0);
+const currentArrow = ref(null);
+const hit = ref(false);
+
 const arrows = [
   {
     code: "&#8592;",
@@ -53,94 +50,77 @@ const arrows = [
     color: "yellow",
     defeated: 0,
   },
-];
-const currentArrow = ref(null);
-const enemyPosition = ref(0);
+]; // same arrow data
 
-let enemyInterval = null;
+// Random arrow selector
+const selectRandomArrow = () =>
+  arrows[Math.floor(Math.random() * arrows.length)];
 
-const enemy = ref(null);
+// Computed styles for enemy
+const enemyStyles = computed(() => ({
+  right: `${enemyPosition.value}%`,
+  backgroundColor:
+    enemyPosition.value >= 80 ? "white" : currentArrow.value.color,
+  clipPath:
+    arrows.find((arrow) => arrow.keyCode === currentArrow.value.keyCode)
+      .defeated === 0
+      ? currentArrow.value.clipPath
+      : "none",
+}));
 
-const newGame = () => {
-  // reset the game
-  clearInterval(enemyInterval);
-
-  // reset enemy position
+// Cleanup function for game reset
+const cleanupGame = () => {
+  if (enemyInterval) {
+    clearInterval(enemyInterval);
+  }
   enemyPosition.value = 0;
+};
 
-  // get random arrow from arrows array
-  currentArrow.value = arrows[Math.floor(Math.random() * arrows.length)];
+// New game function
+const newGame = () => {
+  cleanupGame();
+  currentArrow.value = selectRandomArrow();
+  startGame();
+};
 
+// Game logic function
+const startGame = () => {
   enemyInterval = setInterval(() => {
-    //if the enemy position is less than 50, put an arrow character on it
-    if (enemyPosition.value < 50) {
-      enemy.value.innerHTML = currentArrow.value.code;
-    } else {
-      enemy.value.innerHTML = "";
-    }
-    enemy.value.innerHTML += enemyPosition.value;
-
     enemyPosition.value += 5;
-
-    // if enemy reaches left side of the screen
     if (enemyPosition.value >= 100) {
       enemyPosition.value = 0;
       console.log("game over");
     }
-    // enemys position %
-    enemy.value.style.right = `${enemyPosition.value}%`;
-
-    // if enemy position is 70-80, make it white
-    if (enemyPosition.value >= 80) {
-      enemy.value.style.background = "white";
-    } else {
-      enemy.value.style.backgroundColor = currentArrow.value.color;
-    }
   }, gameSpeed.value);
 };
 
-window.addEventListener("keydown", (e) => {
-  // ...
+// Keydown event handler
+const handleKeydown = (e) => {
   if (e.code === currentArrow.value.keyCode && enemyPosition.value > 80) {
-    // gameSpeed.value = gameSpeed.value * 0.9;
     hit.value = true;
-  } else {
-    // gameSpeed.value = gameSpeed.value * 1.1;
   }
-});
+};
 
-const hit = ref(false);
-watch(hit, (value) => {
-  if (value) {
-    // if hit is true, reset enemy position. (the )
-    enemyPosition.value = -15;
-    console.log("hit");
+// Watch for hit and start new game
+watchEffect(() => {
+  if (hit.value) {
+    // add to the defeated of arrow
+    currentArrow.value.defeated += 1;
+    console.log(currentArrow.value.defeated);
     hit.value = false;
-    arrows.forEach((arrow) => {
-      if (arrow.keyCode === currentArrow.value.keyCode) {
-        arrow.defeated++;
-        console.log("arrow.defeated: ", arrow.defeated);
-      }
-    });
-    // set random arrow on enemy
-    currentArrow.value = arrows[Math.floor(Math.random() * arrows.length)];
-
     newGame();
   }
 });
 
-watch(gameSpeed, (value) => {
-  // console.log(gameSpeed.value);
-  // newGame();
-  // keep the game speed between 20 and 100
-  // if (gameSpeed.value < 20) {
-  //   gameSpeed.value = 20;
-  // } else if (gameSpeed.value > 100) {
-  //   gameSpeed.value = 100;
-  // }
+// Setup and cleanup keydown event listener
+onMounted(() => {
+  window.addEventListener("keydown", handleKeydown);
 });
-const player = ref(null);
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", handleKeydown);
+});
 
+// Initialize the game
 newGame();
 </script>
 
