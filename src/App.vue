@@ -1,30 +1,174 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+  <div id="app" v-if="isLoading">
+    <div class="game-board">
+      <div class="x-ray"></div>
+
+      <div class="player-aura">
+        <div class="player" ref="player"></div>
+      </div>
+      <div class="enemy" ref="enemy"></div>
+    </div>
   </div>
-  <HelloWorld msg="Vite + Vue" />
 </template>
 
+<script setup>
+import { ref, onMounted, watch } from "vue";
+
+const isLoading = ref(true);
+
+const gameSpeed = ref(100);
+const enemySpeed = ref(1);
+const arrows = [
+  { code: "&#8592;", keyCode: "ArrowLeft" },
+  { code: "&#8593;", keyCode: "ArrowUp" },
+  { code: "&#8594;", keyCode: "ArrowRight" },
+  { code: "&#8595;", keyCode: "ArrowDown" },
+];
+const currentArrow = ref(null);
+const enemyPosition = ref(0);
+
+let enemyInterval = null;
+
+const enemy = ref(null);
+
+const newGame = () => {
+  // reset the game
+  clearInterval(enemyInterval);
+
+  // reset enemy position
+  enemyPosition.value = 0;
+
+  // get random arrow from arrows array
+  currentArrow.value = arrows[Math.floor(Math.random() * arrows.length)];
+
+  enemyInterval = setInterval(() => {
+    //if the enemy position is less than 50, put an arrow character on it
+    if (enemyPosition.value < 50) {
+      enemy.value.innerHTML = currentArrow.value.code;
+    } else {
+      enemy.value.innerHTML = "";
+    }
+    enemy.value.innerHTML += enemyPosition.value;
+
+    enemyPosition.value += 5;
+
+    // if enemy reaches left side of the screen
+    if (enemyPosition.value >= 100) {
+      enemyPosition.value = 0;
+      console.log("game over");
+    }
+    // enemys position %
+    enemy.value.style.right = `${enemyPosition.value}%`;
+
+    // if enemy position is 70-80, make it white
+    if (enemyPosition.value >= 80) {
+      enemy.value.style.background = "white";
+    } else {
+      enemy.value.style.background = "red";
+    }
+  }, gameSpeed.value);
+};
+
+window.addEventListener("keydown", (e) => {
+  // ...
+  if (e.code === currentArrow.value.keyCode && enemyPosition.value > 80) {
+    gameSpeed.value = gameSpeed.value * 0.9;
+    hit.value = true;
+  } else {
+    gameSpeed.value = gameSpeed.value * 1.1;
+  }
+});
+
+const hit = ref(false);
+watch(hit, (value) => {
+  if (value) {
+    // if hit is true, reset enemy position. (the )
+    enemyPosition.value = -15;
+    console.log("hit");
+    hit.value = false;
+    // set random arrow on enemy
+    currentArrow.value = arrows[Math.floor(Math.random() * arrows.length)];
+  }
+});
+
+watch(gameSpeed, (value) => {
+  console.log(gameSpeed.value);
+  newGame();
+
+  // keep the game speed between 20 and 100
+  if (gameSpeed.value < 20) {
+    gameSpeed.value = 20;
+  } else if (gameSpeed.value > 100) {
+    gameSpeed.value = 100;
+  }
+});
+const player = ref(null);
+
+newGame();
+</script>
+
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+#app {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 0;
+  font-size: 1rem;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+
+.game-board {
+  transform: translate(5%, 5%);
+  width: 90%;
+  height: 50%;
+  position: relative;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+
+.player,
+.enemy {
+  width: 10px;
+  height: 20px;
+  position: absolute;
+  transition: all 0.1s linear;
+}
+
+.player-aura {
+  left: 0;
+  bottom: 0;
+  position: absolute;
+  width: 15%;
+  height: 100px;
+  border-right: 10px solid rgba(194, 245, 112, 0.1);
+  transform: translateX(10%);
+}
+.player {
+  left: 0;
+  bottom: 0;
+  background: green;
+  line-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.enemy {
+  right: 0;
+  bottom: 0;
+  background: red;
+  line-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.x-ray {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 50%;
+  background-color: rgba(0, 0, 0, 0.5);
 }
 </style>

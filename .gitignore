@@ -1,0 +1,24 @@
+# Dependency directories
+node_modules/
+dist/
+
+# IDE and editor files
+.idea/
+.vscode/
+
+# Build artifacts
+.DS_Store
+*.log
+
+# Environment files
+.env.local
+.env.*.local
+.env.*.production
+.env.production.local
+
+# Ignore lock files if applicable
+package-lock.json
+yarn.lock
+
+# Ignore cache directories
+.cache/
