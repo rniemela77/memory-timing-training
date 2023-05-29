@@ -1,127 +1,13 @@
 <template>
-  <div id="app">
-    <div class="game-board">
-      <div class="x-ray"></div>
-      <div class="player-aura">
-        <div class="player" ref="player"></div>
-      </div>
-      <div class="enemy" ref="enemy" :style="enemyStyles"></div>
-    </div>
-  </div>
+  <!-- <HelloWorld /> -->
+  <!-- <MemoryMatrix /> -->
+  <MemoryMatrix2 />
+  <DotToDot />/
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed, watchEffect } from "vue";
-
-let enemyInterval = null;
-
-const enemy = ref(null);
-const gameSpeed = ref(200);
-const enemyPosition = ref(0);
-const currentArrow = ref(null);
-const hit = ref(false);
-
-const arrows = [
-  {
-    code: "&#8592;",
-    keyCode: "ArrowLeft",
-    clipPath: "polygon(0 50%, 100% 0, 100% 100%, 0 50%)",
-    color: "orange",
-    defeated: 0,
-  },
-  {
-    code: "&#8593;",
-    keyCode: "ArrowUp",
-    clipPath: "polygon(50% 0, 50% 0, 100% 100%, 0% 100%)",
-    color: "cyan",
-    defeated: 0,
-  },
-  {
-    code: "&#8594;",
-    keyCode: "ArrowRight",
-    clipPath: "polygon(0 0, 100% 50%, 100% 50%, 0 100%)",
-    color: "pink",
-    defeated: 0,
-  },
-  {
-    code: "&#8595;",
-    keyCode: "ArrowDown",
-    clipPath: "polygon(0 0, 100% 0, 50% 100%, 50% 100%)",
-    color: "yellow",
-    defeated: 0,
-  },
-]; // same arrow data
-
-// Random arrow selector
-const selectRandomArrow = () =>
-  arrows[Math.floor(Math.random() * arrows.length)];
-
-// Computed styles for enemy
-const enemyStyles = computed(() => ({
-  right: `${enemyPosition.value}%`,
-  backgroundColor:
-    enemyPosition.value >= 80 ? "white" : currentArrow.value.color,
-  clipPath:
-    arrows.find((arrow) => arrow.keyCode === currentArrow.value.keyCode)
-      .defeated === 0
-      ? currentArrow.value.clipPath
-      : "none",
-}));
-
-// Cleanup function for game reset
-const cleanupGame = () => {
-  if (enemyInterval) {
-    clearInterval(enemyInterval);
-  }
-  enemyPosition.value = 0;
-};
-
-// New game function
-const newGame = () => {
-  cleanupGame();
-  currentArrow.value = selectRandomArrow();
-  startGame();
-};
-
-// Game logic function
-const startGame = () => {
-  enemyInterval = setInterval(() => {
-    enemyPosition.value += 5;
-    if (enemyPosition.value >= 100) {
-      enemyPosition.value = 0;
-      console.log("game over");
-    }
-  }, gameSpeed.value);
-};
-
-// Keydown event handler
-const handleKeydown = (e) => {
-  if (e.code === currentArrow.value.keyCode && enemyPosition.value > 80) {
-    hit.value = true;
-  }
-};
-
-// Watch for hit and start new game
-watchEffect(() => {
-  if (hit.value) {
-    // add to the defeated of arrow
-    currentArrow.value.defeated += 1;
-    console.log(currentArrow.value.defeated);
-    hit.value = false;
-    newGame();
-  }
-});
-
-// Setup and cleanup keydown event listener
-onMounted(() => {
-  window.addEventListener("keydown", handleKeydown);
-});
-onBeforeUnmount(() => {
-  window.removeEventListener("keydown", handleKeydown);
-});
-
-// Initialize the game
-newGame();
+// import DotToDot from "./components/DotToDot.vue";
+import MemoryMatrix2 from "./components/MemoryMatrix2.vue";
 </script>
 
 <style scoped>
